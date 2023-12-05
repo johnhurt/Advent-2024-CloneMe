@@ -155,13 +155,7 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(
-            "two1nine\n\
-                eightwothree\n\
-                abcone2threexyz\n\
-                xtwone3four\n\
-                4nineeightseven2\n\
-                zoneight234\n\
-                7pqrstsixteen\n",
+            &advent_of_code::template::read_extra_example_file(DAY, 1),
         );
         assert_eq!(result, Some(281));
     }

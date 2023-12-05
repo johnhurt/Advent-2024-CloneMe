@@ -6,7 +6,6 @@ use nom::sequence::preceded;
 use nom::sequence::tuple;
 use nom::IResult;
 use std::collections::HashMap;
-use std::collections::HashSet;
 
 advent_of_code::solution!(4);
 
@@ -28,9 +27,6 @@ fn parse_cards(
 
 pub fn part_one(input: &str) -> Option<u32> {
     let result = parse_cards(input)
-        .map(|(card, winners, guesses)| {
-            (card, winners.into_iter().collect::<HashSet<_>>(), guesses)
-        })
         .map(|(_, winners, guesses)| {
             guesses
                 .into_iter()
@@ -48,9 +44,6 @@ pub fn part_two(input: &str) -> Option<u32> {
     let mut copies = HashMap::new();
 
     parse_cards(input)
-        .map(|(card, winners, guesses)| {
-            (card, winners.into_iter().collect::<HashSet<_>>(), guesses)
-        })
         .map(|(card, winners, guesses)| {
             (
                 card,

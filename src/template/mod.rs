@@ -10,6 +10,16 @@ pub const ANSI_ITALIC: &str = "\x1b[3m";
 pub const ANSI_BOLD: &str = "\x1b[1m";
 pub const ANSI_RESET: &str = "\x1b[0m";
 
+pub fn read_extra_example_file(day: Day, number: u32) -> String {
+    let cwd = env::current_dir().unwrap();
+    let filepath = cwd
+        .join("data")
+        .join("examples")
+        .join(format!("{day}-{number}.txt"));
+    let f = fs::read_to_string(filepath);
+    f.expect("could not open input file")
+}
+
 /// Helper function that reads a text file to a string.
 #[must_use]
 pub fn read_file(folder: &str, day: Day) -> String {

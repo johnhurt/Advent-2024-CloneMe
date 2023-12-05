@@ -5,7 +5,7 @@ pub use day::*;
 
 use nom::{
     character::complete::multispace0, error::ParseError, sequence::delimited,
-    IResult, Parser,
+    Parser,
 };
 
 /// A combinator that takes a parser `inner` and produces a parser that also consumes both leading and

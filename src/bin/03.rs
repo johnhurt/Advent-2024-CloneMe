@@ -76,7 +76,6 @@ fn get_surrounding_symbols<'a>(
             })
         })
         .flatten()
-        .unique()
         .filter(|i| *i < input.len())
         .map(|i| (i, input.as_bytes()[i] as char))
         .filter(|(_, c)| *c != '.' && !c.is_ascii_digit() && *c != '\n')
