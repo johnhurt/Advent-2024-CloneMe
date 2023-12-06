@@ -6,7 +6,10 @@ use std::ops::Range;
 pub use day::*;
 
 use nom::{
-    character::complete::multispace0, error::ParseError, sequence::delimited,
+    bytes::complete::{tag, take_until},
+    character::complete::multispace0,
+    error::ParseError,
+    sequence::{delimited, preceded},
     Parser,
 };
 
@@ -19,6 +22,12 @@ where
     F: Parser<&'a str, O, E>,
 {
     delimited(multispace0, inner, multispace0)
+}
+
+pub fn take_until_inclusive<'a, E: ParseError<&'a str>>(
+    tag_str: &'static str,
+) -> impl Parser<&'a str, &'a str, E> {
+    preceded(take_until(tag_str), tag(tag_str))
 }
 
 // Get the intersection between the two ranges if there are any
