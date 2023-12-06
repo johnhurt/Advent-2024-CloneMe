@@ -56,6 +56,8 @@ fn get_real_solutions(limit: u64, min_dist: u64) -> (u64, u64) {
     (min_valid, max_valid.min(limit))
 }
 
+// Note to future self. Nom can return 0 if you try to parse a number that is
+// to big for a u32 as a u32 😱
 fn parse(input: &str) -> Vec<(u64, u64)> {
     let result: IResult<_, _> = tuple((
         preceded(
