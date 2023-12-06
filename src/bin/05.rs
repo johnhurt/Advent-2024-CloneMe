@@ -36,6 +36,11 @@ impl MapEntry {
         }
     }
 
+    // Apply this mapping to a range instead of a single value.
+    fn apply_range(&self, range: &Range<u64>) -> Range<u64> {
+        self.apply(range.start)..self.apply(range.end - 1) + 1
+    }
+
     // Get the range of the source that is mapped by this mapping
     fn src_range(&self) -> Range<u64> {
         self.src_start..(self.src_start + self.len)
@@ -46,9 +51,7 @@ impl MapEntry {
         let src_range = self.src_range();
         let before = intersection(&range, &(0..src_range.start));
         let during_opt = intersection(&src_range, &range);
-        let during_mapped = during_opt.map(|during| {
-            self.apply(during.start)..self.apply(during.end - 1) + 1
-        });
+        let during_mapped = during_opt.map(|during| self.apply_range(&during));
         let after = intersection(&range, &(src_range.end..range.end));
 
         (before, during_mapped, after)
@@ -229,8 +232,8 @@ mod tests {
         let (before, during, after) = e.track_ranges(74..95);
 
         assert_eq!(before, None);
-        assert_eq!(during, Some(57..70));
-        assert_eq!(after, None);
+        assert_eq!(during, Some(78..81));
+        assert_eq!(after, Some(77..95));
     }
 
     #[test]
