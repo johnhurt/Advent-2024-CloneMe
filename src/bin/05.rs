@@ -1,4 +1,4 @@
-use advent_of_code::ws;
+use advent_of_code::{intersection, ws};
 use itertools::Itertools;
 use nom::{
     bytes::complete::tag,
@@ -9,7 +9,7 @@ use nom::{
     sequence::{preceded, terminated, tuple},
     IResult,
 };
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, ops::Range};
 
 advent_of_code::solution!(5);
 
@@ -20,6 +20,10 @@ struct MapEntry {
     dest_start: u64,
     len: u64,
 }
+
+// This is just to make clippy happy. This type is used below to do tracking
+type BeforeDuringAfter =
+    (Option<Range<u64>>, Option<Range<u64>>, Option<Range<u64>>);
 
 impl MapEntry {
     // Apply this mapping against the given key. If the key is within the source
@@ -32,13 +36,22 @@ impl MapEntry {
         }
     }
 
-    // Reverse this range, so the mapping can be applied in reverse
-    fn reverse(&self) -> Self {
-        MapEntry {
-            src_start: self.dest_start,
-            dest_start: self.src_start,
-            len: self.len,
-        }
+    // Get the range of the source that is mapped by this mapping
+    fn src_range(&self) -> Range<u64> {
+        self.src_start..(self.src_start + self.len)
+    }
+
+    // Track how the given range is mapped by this entry (before, during, after)
+    fn track_ranges(&self, range: Range<u64>) -> BeforeDuringAfter {
+        let src_range = self.src_range();
+        let before = intersection(&range, &(0..src_range.start));
+        let during_opt = intersection(&src_range, &range);
+        let during_mapped = during_opt.map(|during| {
+            self.apply(during.start)..self.apply(during.end - 1) + 1
+        });
+        let after = intersection(&range, &(src_range.end..range.end));
+
+        (before, during_mapped, after)
     }
 }
 
@@ -50,6 +63,8 @@ fn parse_seeds(input: &str) -> IResult<&'_ str, Vec<u64>> {
     )(input)
 }
 
+// Parse the whole section of the input that contains the map entries including
+// the title line
 fn parse_map_entries(input: &str) -> IResult<&'_ str, Vec<MapEntry>> {
     separated_list1(
         tag("\n"),
@@ -91,6 +106,63 @@ fn eval_single_map(map: &BTreeMap<u64, MapEntry>, key: u64) -> u64 {
     }
 }
 
+// Trace how the the given set of ranges are mapped by the all the mappings in
+// in the given ordered set. This is done by checking how each range is mapped/
+// split by each mapping and then combining them in the end into a new sorted
+// map of ranges
+fn trace_single_map_ranges(
+    ranges: &BTreeMap<u64, Range<u64>>,
+    map: &BTreeMap<u64, MapEntry>,
+) -> BTreeMap<u64, Range<u64>> {
+    ranges
+        .values()
+        .map(|in_range| {
+
+            let first = map.range(..=in_range.start).next_back();
+            let rest = map.range(in_range.clone());
+
+            (
+                in_range,
+                first.into_iter().chain(rest).map(|(_, e)| e)
+            )
+        })
+        .flat_map(|(in_range, entries)| {
+            let mut rest = Some(in_range.clone());
+            let mut result = vec![];
+
+            for entry in entries {
+                if rest.is_none() {
+                    break;
+                }
+                match entry.track_ranges(rest.unwrap()) {
+                    (Some(before), Some(during), after) => {
+                        rest = after;
+                        result.push(before);
+                        result.push(during);
+                    }
+                    (None, Some(during), after) => {
+                        rest = after;
+                        result.push(during);
+                    }
+                    (Some(_), None, _) => {
+                        unreachable!("We shouldn't see any before range if range is empty");
+                    }
+                    (None, None, after) => {
+                        rest = after;
+                    }
+                }
+            }
+
+            if let Some(after) = rest {
+                result.push(after);
+            }
+
+            result
+        })
+        .map(|e| (e.start, e))
+        .collect::<BTreeMap<_, _>>()
+}
+
 // The mappings in this problem are applied one after another in a chain. We
 // don't need to know anything about the intermediate values. We just need the
 // order to be correct
@@ -109,28 +181,20 @@ impl MapChain {
             .fold(start_key, |key, map| eval_single_map(map, key))
     }
 
-    // Get a map that is the reverse of this one
-    fn reverse(&self) -> Self {
-        let reversed_maps = self
-            .0
-            .iter()
-            .rev()
-            .map(|entries| {
-                entries
-                    .values()
-                    .map(MapEntry::reverse)
-                    .map(|e| (e.src_start, e))
-                    .collect::<BTreeMap<_, _>>()
-            })
-            .collect_vec();
-
-        Self(reversed_maps)
+    // trace and record how all the given ranges are mapped and split by all the
+    // mappings in this chain
+    fn trace_ranges(
+        &self,
+        ranges: BTreeMap<u64, Range<u64>>,
+    ) -> BTreeMap<u64, Range<u64>> {
+        self.0.iter().fold(ranges, |in_ranges, map| {
+            trace_single_map_ranges(&in_ranges, map)
+        })
     }
 }
 
 fn parse_input(input: &str) -> (Vec<u64>, MapChain) {
     let result: IResult<_, _> = tuple((parse_seeds, MapChain::parse))(input);
-
     result.unwrap().1
 }
 
@@ -147,24 +211,27 @@ pub fn part_two(input: &str) -> Option<u64> {
         .map(|(start, len)| (start, start..(start + len)))
         .collect::<BTreeMap<_, _>>();
 
-    let rev_maps = maps.reverse();
-
-    // search up through locations until we find one with a valid seed
-    (0..)
-        .map(|location| (location, rev_maps.eval(location)))
-        .find(|(_, seed)| {
-            seed_ranges
-                .range(..=seed)
-                .next_back()
-                .filter(|(_, range)| range.contains(seed))
-                .is_some()
-        })
-        .map(|(location, _)| location)
+    maps.trace_ranges(seed_ranges).keys().copied().next()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_single_trace() {
+        let e = MapEntry {
+            src_start: 64,
+            dest_start: 68,
+            len: 13,
+        };
+
+        let (before, during, after) = e.track_ranges(74..95);
+
+        assert_eq!(before, None);
+        assert_eq!(during, Some(57..70));
+        assert_eq!(after, None);
+    }
 
     #[test]
     fn test_part_one() {
