@@ -1,7 +1,7 @@
 use advent_of_code::{take_until_inclusive, ws};
 use nom::{
     character::complete::{alpha1, u64},
-    multi::many0,
+    multi::many1,
     sequence::{preceded, terminated, tuple},
     IResult,
 };
@@ -56,15 +56,13 @@ fn get_real_solutions(limit: u64, min_dist: u64) -> (u64, u64) {
     (min_valid, max_valid.min(limit))
 }
 
-// Note to future self. Nom can return 0 if you try to parse a number that is
-// to big for a u32 as a u32 😱
 fn parse(input: &str) -> Vec<(u64, u64)> {
     let result: IResult<_, _> = tuple((
         preceded(
             take_until_inclusive(":"),
-            terminated(many0(ws(u64)), alpha1),
+            terminated(many1(ws(u64)), alpha1),
         ),
-        preceded(take_until_inclusive(":"), many0(ws(u64))),
+        preceded(take_until_inclusive(":"), many1(ws(u64))),
     ))(input);
 
     let (top, bottom) = result.unwrap().1;
