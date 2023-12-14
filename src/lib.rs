@@ -5,6 +5,7 @@ use std::ops::Range;
 
 pub use day::*;
 
+use itertools::Itertools;
 use nom::{
     bytes::complete::{tag, take_until},
     character::complete::multispace0,
@@ -44,4 +45,80 @@ where
     let min_end = if r1.end < r2.end { r1.end } else { r2.end };
 
     (max_start < min_end).then(|| max_start..min_end)
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct Grid<T> {
+    pub width: usize,
+    pub height: usize,
+    pub data: Vec<T>,
+}
+
+impl<T> Grid<T>
+where
+    T: From<char>,
+{
+    pub fn parse_lines(input: &str) -> Self {
+        let width = input.find('\n').unwrap_or(input.len());
+
+        // Double check all the lines match the expected width
+        debug_assert!(!input.lines().any(|line| line.len() != width));
+
+        let data = input
+            .chars()
+            .filter(|c| *c != '\n')
+            .map(T::from)
+            .collect_vec();
+
+        Self::new(data, width)
+    }
+}
+
+impl<T> Grid<T>
+where
+    char: From<T>,
+    T: Copy,
+{
+    pub fn print(&self) {
+        self.rows().for_each(|row| {
+            println!(
+                "{}",
+                row.iter().map(|t| char::from(*t)).collect::<String>()
+            )
+        });
+    }
+}
+
+impl<T> Grid<T> {
+    pub fn new(data: Vec<T>, width: usize) -> Self {
+        let height = data.len() / width;
+        Self {
+            data,
+            width,
+            height,
+        }
+    }
+
+    pub fn rows(&self) -> impl DoubleEndedIterator<Item = &'_ [T]> + '_ {
+        self.data.chunks(self.width)
+    }
+
+    pub fn rows_mut(
+        &mut self,
+    ) -> impl DoubleEndedIterator<Item = &'_ mut [T]> + '_ {
+        self.data.chunks_mut(self.width)
+    }
+
+    pub fn for_row_pairs_mut<F>(&mut self, mut action: F)
+    where
+        F: FnMut(&'_ mut [T], &'_ mut [T]),
+    {
+        let mut iter = self.rows_mut();
+        let mut prev = iter.next().unwrap();
+
+        for next in iter {
+            action(prev, next);
+            prev = next;
+        }
+    }
 }
