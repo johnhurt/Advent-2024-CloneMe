@@ -47,6 +47,14 @@ where
     (max_start < min_end).then(|| max_start..min_end)
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Compass {
+    N,
+    E,
+    S,
+    W,
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct Grid<T> {
     pub width: usize,
@@ -119,6 +127,21 @@ impl<T> Grid<T> {
         for next in iter {
             action(prev, next);
             prev = next;
+        }
+    }
+
+    pub fn at_index(&self, i: usize) -> Option<&'_ T> {
+        self.data.get(i)
+    }
+
+    pub fn step_from_index(&self, i: usize, dir: Compass) -> Option<usize> {
+        use Compass as D;
+
+        match dir {
+            D::E => (i % self.width < (self.width - 1)).then_some(i + 1),
+            D::W => (i % self.width > 0).then_some(i - 1),
+            D::N => i.checked_sub(self.width),
+            D::S => Some(i + self.width).filter(|j| *j < self.data.len()),
         }
     }
 }
