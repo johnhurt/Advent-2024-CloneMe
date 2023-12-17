@@ -13,6 +13,11 @@ use nom::{
     sequence::{delimited, preceded},
     Parser,
 };
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
+use tinyvec::TinyVec;
+
+pub type TV4<K> = TinyVec<[K; 4]>;
 
 /// A combinator that takes a parser `inner` and produces a parser that also consumes both leading and
 /// trailing whitespace, returning the output of `inner`.
@@ -47,12 +52,26 @@ where
     (max_start < min_end).then(|| max_start..min_end)
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, EnumIter)]
 pub enum Compass {
+    #[default]
     N,
     E,
     S,
     W,
+}
+
+impl Compass {
+    pub fn opposite(&self) -> Self {
+        use Compass as D;
+
+        match self {
+            D::E => D::W,
+            D::N => D::S,
+            D::W => D::E,
+            D::S => D::N,
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -134,14 +153,31 @@ impl<T> Grid<T> {
         self.data.get(i)
     }
 
+    #[allow(clippy::unnecessary_lazy_evaluations)]
     pub fn step_from_index(&self, i: usize, dir: Compass) -> Option<usize> {
         use Compass as D;
 
         match dir {
             D::E => (i % self.width < (self.width - 1)).then_some(i + 1),
-            D::W => (i % self.width > 0).then_some(i - 1),
+            D::W => (i % self.width > 0).then(|| i - 1),
             D::N => i.checked_sub(self.width),
             D::S => Some(i + self.width).filter(|j| *j < self.data.len()),
         }
+    }
+
+    pub fn neighbors(
+        &self,
+        i: usize,
+    ) -> impl Iterator<Item = (Compass, usize)> + '_ {
+        Compass::iter().filter_map(move |dir| {
+            self.step_from_index(i, dir).map(move |j| (dir, j))
+        })
+    }
+
+    pub fn min_dist(&self, from: usize, to: usize) -> usize {
+        let col_dist = (from % self.width).abs_diff(to % self.width);
+        let row_dist = (from / self.width).abs_diff(to / self.width);
+
+        col_dist + row_dist
     }
 }
