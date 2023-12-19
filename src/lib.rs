@@ -62,6 +62,16 @@ pub enum Compass {
 }
 
 impl Compass {
+    pub fn from_relative(relative: char) -> Option<Self> {
+        match relative {
+            'U' => Some(Compass::N),
+            'D' => Some(Compass::S),
+            'L' => Some(Compass::W),
+            'R' => Some(Compass::E),
+            _ => None,
+        }
+    }
+
     pub fn opposite(&self) -> Self {
         use Compass as D;
 

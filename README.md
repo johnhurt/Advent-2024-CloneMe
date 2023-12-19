@@ -34,25 +34,26 @@ Solutions for [Advent of Code](https://adventofcode.com/) in [Rust](https://www.
 
 | Day | Part 1 | Part 2 |
 | :---: | :---: | :---:  |
-| [Day 1](./src/bin/01.rs) | `32.8µs` | `377.3µs` |
-| [Day 2](./src/bin/02.rs) | `101.4µs` | `101.4µs` |
-| [Day 3](./src/bin/03.rs) | `8.6ms` | `9.4ms` |
-| [Day 4](./src/bin/04.rs) | `269.0µs` | `306.6µs` |
-| [Day 5](./src/bin/05.rs) | `26.7µs` | `96.9µs` |
-| [Day 6](./src/bin/06.rs) | `571.0ns` | `1.0µs` |
-| [Day 7](./src/bin/07.rs) | `649.0µs` | `670.6µs` |
-| [Day 8](./src/bin/08.rs) | `809.1µs` | `7.0ms` |
-| [Day 9](./src/bin/09.rs) | `499.2µs` | `492.7µs` |
-| [Day 10](./src/bin/10.rs) | `174.2µs` | `4.0ms` |
-| [Day 11](./src/bin/11.rs) | `4.8ms` | `4.8ms` |
-| [Day 12](./src/bin/12.rs) | `1.3ms` | `24.4ms` |
-| [Day 13](./src/bin/13.rs) | `199.0µs` | `206.3µs` |
-| [Day 14](./src/bin/14.rs) | `412.6µs` | `333.0ms` |
-| [Day 15](./src/bin/15.rs) | `76.6µs` | `352.3µs` |
-| [Day 16](./src/bin/16.rs) | `3.6ms` | `1.0s` |
-| [Day 17](./src/bin/17.rs) | `121.1ms` | `317.7ms` |
+| [Day 1](./src/bin/01.rs) | `34.4µs` | `369.0µs` |
+| [Day 2](./src/bin/02.rs) | `101.5µs` | `102.5µs` |
+| [Day 3](./src/bin/03.rs) | `9.0ms` | `9.6ms` |
+| [Day 4](./src/bin/04.rs) | `287.1µs` | `302.0µs` |
+| [Day 5](./src/bin/05.rs) | `26.9µs` | `100.2µs` |
+| [Day 6](./src/bin/06.rs) | `550.0ns` | `1.0µs` |
+| [Day 7](./src/bin/07.rs) | `683.4µs` | `691.6µs` |
+| [Day 8](./src/bin/08.rs) | `840.2µs` | `7.2ms` |
+| [Day 9](./src/bin/09.rs) | `501.7µs` | `508.8µs` |
+| [Day 10](./src/bin/10.rs) | `167.3µs` | `4.2ms` |
+| [Day 11](./src/bin/11.rs) | `5.0ms` | `5.0ms` |
+| [Day 12](./src/bin/12.rs) | `1.4ms` | `27.2ms` |
+| [Day 13](./src/bin/13.rs) | `203.5µs` | `202.3µs` |
+| [Day 14](./src/bin/14.rs) | `415.9µs` | `332.7ms` |
+| [Day 15](./src/bin/15.rs) | `68.6µs` | `365.5µs` |
+| [Day 16](./src/bin/16.rs) | `3.8ms` | `1.0s` |
+| [Day 17](./src/bin/17.rs) | `116.4ms` | `314.9ms` |
+| [Day 18](./src/bin/18.rs) | `685.8µs` | `711.4µs` |
 
-**Total: 1845.56ms**
+**Total: 1843.77ms**
 <!--- benchmarking table --->
 
 ---
