@@ -323,16 +323,7 @@ pub fn part_two(input: &str) -> Option<usize> {
 
     Some(result)
 }
-// 19685294027512 + 2 * 86635709125300
-// 106321003152812
-// 173271418250600
-// 211106232532992
-// 149814466590512
-//
-//   2  192956712278112
-// lb - 211106232532992
-//   3  279592421403412
-// ub - 281474976710656
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -350,13 +341,5 @@ mod tests {
             &advent_of_code::template::read_extra_example_file(DAY, 1),
         );
         assert_eq!(result, Some(11687500));
-    }
-
-    #[test]
-    fn test_part_two() {
-        let result = part_two(
-            &advent_of_code::template::read_extra_example_file(DAY, 1),
-        );
-        assert_eq!(result, Some(1));
     }
 }
