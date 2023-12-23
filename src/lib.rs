@@ -184,10 +184,80 @@ impl<T> Grid<T> {
         })
     }
 
+    pub fn escaping(&self, i: usize) -> impl Iterator<Item = Compass> + '_ {
+        Compass::iter().filter_map(move |dir| {
+            self.step_from_index(i, dir).is_none().then_some(dir)
+        })
+    }
+
     pub fn min_dist(&self, from: usize, to: usize) -> usize {
         let col_dist = (from % self.width).abs_diff(to % self.width);
         let row_dist = (from / self.width).abs_diff(to / self.width);
 
         col_dist + row_dist
+    }
+
+    pub fn is_border(&self, i: usize) -> bool {
+        let col = i % self.width;
+        let row = i / self.width;
+
+        row == 0 || col == 0 || row == self.height - 1 || col == self.width - 1
+    }
+
+    pub fn border(&self) -> impl Iterator<Item = usize> + '_ {
+        (0..self.width)
+            .chain((self.data.len() - self.width)..self.data.len())
+            .chain((0..self.height).map(|i| i * self.width))
+            .chain((0..self.height).map(|i| (i + 1) * self.width - 1))
+    }
+
+    pub fn are_neighbors(&self, i1: usize, i2: usize) -> bool {
+        let (r1, c1) = (i1 / self.width, i1 % self.width);
+        let (r2, c2) = (i2 / self.width, i2 % self.width);
+
+        r1.abs_diff(r2) + c1.abs_diff(c2) == 1
+    }
+
+    pub fn corners(&self) -> impl Iterator<Item = usize> {
+        [
+            0,
+            self.width - 1,
+            self.data.len() - 1,
+            self.data.len() - self.width,
+        ]
+        .into_iter()
+    }
+
+    pub fn to_col_row(&self, i: usize) -> (i32, i32) {
+        ((i % self.width) as i32, (i / self.width) as i32)
+    }
+}
+
+impl<T> Grid<T>
+where
+    T: Copy,
+{
+    pub fn quadruple(self) -> Self {
+        let mut data = Vec::with_capacity(self.data.len() * 4);
+        let width = self.width * 2;
+        let height = self.height * 2;
+
+        for _ in 0..2 {
+            for row in 0..self.height {
+                for _ in 0..2 {
+                    data.extend(
+                        self.data[(row * self.width)..((row + 1) * self.width)]
+                            .iter()
+                            .copied(),
+                    );
+                }
+            }
+        }
+
+        Self {
+            data,
+            height,
+            width,
+        }
     }
 }
