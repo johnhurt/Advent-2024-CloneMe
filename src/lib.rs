@@ -231,6 +231,10 @@ impl<T> Grid<T> {
     pub fn to_col_row(&self, i: usize) -> (i32, i32) {
         ((i % self.width) as i32, (i / self.width) as i32)
     }
+
+    pub fn to_index(&self, col: i32, row: i32) -> usize {
+        col as usize + row as usize * self.width
+    }
 }
 
 impl<T> Grid<T>
