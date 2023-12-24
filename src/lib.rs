@@ -84,7 +84,7 @@ impl Compass {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Grid<T> {
     pub width: usize,
     pub height: usize,
