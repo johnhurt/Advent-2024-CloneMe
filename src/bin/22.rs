@@ -1,5 +1,5 @@
 use core::panic;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::BTreeMap;
 
 use itertools::Itertools;
 use nom::{
@@ -8,7 +8,7 @@ use nom::{
     sequence::{terminated, tuple},
     IResult,
 };
-use rstar::{primitives::Rectangle, DefaultParams, Point, RTree, AABB};
+use rstar::{primitives::Rectangle, DefaultParams, RTree, AABB};
 
 advent_of_code::solution!(22);
 
@@ -141,67 +141,6 @@ pub fn part_one(input: &str) -> Option<usize> {
         .count();
 
     Some(result)
-}
-
-fn get_falling_bricks(
-    r_tree: &RT,
-    rect: &Rectangle<Corner>,
-    mut gone: HashSet<Brick>,
-) -> HashSet<Brick> {
-    let up_shadow = AABB::from_corners(
-        (rect.lower().0, rect.lower().1, rect.upper().2 + 1),
-        (rect.upper().0, rect.upper().1, rect.upper().2 + 1),
-    );
-
-    //gone.insert((rect.lower(), rect.upper()));
-
-    let falling = r_tree
-        .locate_in_envelope_intersecting(&up_shadow)
-        .filter(|up_rect| {
-            let c1 = up_rect.lower();
-            let c2 = up_rect.upper();
-            let min_z = c1.2;
-
-            let down_shadow = AABB::from_corners(
-                (c1.0, c1.1, min_z - 1),
-                (c2.0, c2.1, min_z - 1),
-            );
-
-            let below = r_tree
-                .locate_in_envelope_intersecting(&down_shadow)
-                .filter(|r| !gone.contains(&(r.lower(), r.upper())))
-                .count();
-
-            below <= 1
-        })
-        .collect_vec();
-
-    gone.extend(falling.iter().map(|f| (f.lower(), f.upper())));
-
-    for fall_rect in falling.into_iter() {
-        let g_clone = gone.clone();
-        gone.extend(get_falling_bricks(r_tree, fall_rect, g_clone));
-    }
-
-    gone
-}
-
-fn get_falling_bricks_until_done(
-    r_tree: &RT,
-    rect: &Rectangle<Corner>,
-) -> HashSet<Brick> {
-    let mut gone = HashSet::new();
-    let mut gone_size = 0;
-
-    loop {
-        gone = get_falling_bricks(r_tree, rect, gone);
-        if gone_size == gone.len() {
-            break;
-        }
-        gone_size = gone.len();
-    }
-
-    gone
 }
 
 fn simulate_fall(mut r_tree: RT, rect: &Rectangle<Corner>) -> usize {

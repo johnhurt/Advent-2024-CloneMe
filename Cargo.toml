@@ -24,3 +24,4 @@ tinyvec = { version = "1.6.0", features = ["alloc"]}
 hashlink = "0.8.4"
 rstar = "0.11.0"
 num-traits = "0.2.15"
+ordered-float = "4.2.0"

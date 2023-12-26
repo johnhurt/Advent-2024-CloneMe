@@ -1,4 +1,4 @@
-use std::collections::{hash_map::Entry, BinaryHeap, HashMap, HashSet};
+use std::collections::HashSet;
 
 use advent_of_code::{Compass, Grid};
 
@@ -8,7 +8,6 @@ advent_of_code::solution!(23);
 enum Hike {
     None,
     Wall,
-    Walked,
     Slope(Compass),
 }
 
@@ -31,29 +30,12 @@ impl From<Hike> for char {
         match value {
             Hike::None => '.',
             Hike::Wall => '#',
-            Hike::Walked => 'O',
             Hike::Slope(Compass::E) => '>',
             Hike::Slope(Compass::N) => '^',
             Hike::Slope(Compass::W) => '<',
             Hike::Slope(Compass::S) => 'v',
         }
     }
-}
-
-// ub 2028
-// lb 2006
-// g  2010
-
-fn print(grid: &Grid<Hike>, walked: &HashSet<usize>) {
-    let mut g = grid.clone();
-
-    walked
-        .iter()
-        .copied()
-        //.filter(|c| !matches!(grid.data[*c], Hike::Slope(_)))
-        .for_each(|c| g.data[c] = Hike::Walked);
-
-    g.print();
 }
 
 fn max_path(start: usize, end: usize, grid: &Grid<Hike>) -> usize {
@@ -66,8 +48,6 @@ fn max_path(start: usize, end: usize, grid: &Grid<Hike>) -> usize {
         if curr == end {
             if dist > max_dist {
                 max_dist = max_dist.max(dist);
-                // print(grid, &hist);
-                // println!("{dist} ^");
             }
             continue;
         }
