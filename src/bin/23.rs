@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet, VecDeque};
 
 use advent_of_code::{Compass, Grid};
 
@@ -38,7 +38,7 @@ impl From<Hike> for char {
     }
 }
 
-fn max_path(start: usize, end: usize, grid: &Grid<Hike>) -> usize {
+fn max_path(start: usize, end: usize, grid: &mut Grid<Hike>) -> usize {
     let mut stack = vec![];
     stack.push((0, start, HashSet::new()));
 
@@ -93,11 +93,99 @@ fn max_path(start: usize, end: usize, grid: &Grid<Hike>) -> usize {
 }
 
 pub fn part_one(input: &str) -> Option<usize> {
-    let grid = Grid::parse_lines(input);
+    let mut grid = Grid::parse_lines(input);
 
-    let result = max_path(1, grid.data.len() - 2, &grid);
+    let result = max_path(1, grid.data.len() - 2, &mut grid);
 
     Some(result)
+}
+
+fn graph_neighbors(
+    from: usize,
+    grid: &Grid<Hike>,
+    nodes: &HashSet<usize>,
+) -> HashMap<usize, usize> {
+    let mut result = HashMap::new();
+    let mut queue = VecDeque::new();
+
+    queue.push_back((from, 0, from));
+
+    while let Some((curr, dist, prev)) = queue.pop_front() {
+        if curr != from && nodes.contains(&curr) {
+            result.insert(curr, dist);
+        } else {
+            queue.extend(
+                grid.neighbors(curr)
+                    .map(|(_, n)| n)
+                    .filter(|n| grid.data[*n] != Hike::Wall)
+                    .filter(|n| *n != prev)
+                    .map(|n| (n, dist + 1, curr)),
+            )
+        }
+    }
+
+    result
+}
+
+fn extract_graph(
+    grid: &Grid<Hike>,
+    start: usize,
+    end: usize,
+) -> HashMap<usize, HashMap<usize, usize>> {
+    let nodes = [start, end]
+        .into_iter()
+        .chain(
+            grid.data
+                .iter()
+                .enumerate()
+                .filter(|(_, h)| **h != Hike::Wall)
+                .map(|(i, _)| i)
+                .filter(|i| {
+                    grid.neighbors(*i)
+                        .map(|(_, n)| n)
+                        .filter(|n| grid.data[*n] != Hike::Wall)
+                        .count()
+                        > 2
+                }),
+        )
+        .collect::<HashSet<_>>();
+
+    nodes
+        .iter()
+        .map(|n| (*n, graph_neighbors(*n, grid, &nodes)))
+        .collect::<HashMap<_, _>>()
+}
+
+fn search_simplified(start: usize, end: usize, grid: &mut Grid<Hike>) -> usize {
+    let simplified = extract_graph(grid, start, end);
+
+    let mut stack = vec![];
+    stack.push((0, start, HashSet::new()));
+
+    let mut max_dist = 0;
+
+    while let Some((dist, curr, mut hist)) = stack.pop() {
+        if curr == end {
+            if dist > max_dist {
+                max_dist = max_dist.max(dist);
+            }
+            continue;
+        }
+
+        if !hist.insert(curr) {
+            continue;
+        }
+
+        stack.extend(
+            simplified
+                .get(&curr)
+                .unwrap()
+                .iter()
+                .map(|(too, add_dist)| (dist + add_dist, *too, hist.clone())),
+        );
+    }
+
+    max_dist
 }
 
 pub fn part_two(input: &str) -> Option<usize> {
@@ -109,7 +197,7 @@ pub fn part_two(input: &str) -> Option<usize> {
         }
     });
 
-    let result = max_path(1, grid.data.len() - 2, &grid);
+    let result = search_simplified(1, grid.data.len() - 2, &mut grid);
 
     Some(result)
 }
